@@ -4,6 +4,7 @@ library(shinythemes)
 library(shinycssloaders)
 library(shinyjs)
 library(bsplus)
+library(rsconnect)
 
 shinyApp(
   ui = fluidPage(theme = shinytheme("lumen"),
