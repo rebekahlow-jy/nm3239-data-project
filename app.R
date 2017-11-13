@@ -5,6 +5,12 @@ library(shinycssloaders)
 library(shinyjs)
 library(bsplus)
 library(rsconnect)
+library(dplyr)
+library(tidyverse)
+library(rvest)
+library(stringr)
+library(plotly)
+library(RColorBrewer)
 
 shinyApp(
   ui = fluidPage(theme = shinytheme("lumen"),
@@ -227,6 +233,213 @@ shinyApp(
     )
   ),
   server = function(input, output, session) {
+    csv_crudeMarriageRate <- read.csv("./csv/crude-marriage-rate.csv")
+    csv_femaleAgeSpecificMarriageRate <- read.csv("./csv/female-age-specific-marriage-rate.csv")
+    csv_maleAgeSpecificMarriageRate <- read.csv("./csv/male-age-specific-marriage-rate.csv")
+    csv_femaleGeneralMarriageRate <- read.csv("./csv/female-general-marriage-rate.csv")
+    csv_maleGeneralMarriageRate <- read.csv("./csv/male-general-marriage-rate.csv")
+    csv_totalDivorcesByDurationOfMarriage <- read.csv("./csv/total-divorces-by-duration-of-marriage-annual.csv")
+    csv_flatsConstructedByHDB <- read.csv("./csv/flats-constructed-by-housing-and-development-board-annual.csv")
+    
+    url_grants <- "http://www.hdb.gov.sg/cs/infoweb/residential/buying-a-flat/new/first-timer-and-second-timer-couple-applicants"
+    webpage_grants <- read_html(url_grants)
+    grant_amount <- html_nodes(webpage_grants, 'table')[2] %>% html_node("tbody") %>% html_nodes("tr") %>% html_nodes("td:last-child") %>% html_text() 
+    grant_amount <- grant_amount[-c(1)]
+    grant_amount <- str_replace_all(grant_amount, "[$,]", "") %>% as.numeric()
+    income_level <- html_nodes(webpage_grants, 'table')[2] %>% html_node("tbody") %>% html_nodes("tr") %>% html_nodes("td:first-child") %>% html_text() 
+    income_level <- income_level[-c(1)]
+    income_level <- str_replace_all(income_level, "[\t\n\r\v\f]", "") 
+    df_grants <- data.frame(income_level=income_level, grant_amount=grant_amount)
+    df_grants$income_level <- factor(df_grants$income_level, levels = df_grants$income_level)
+    df_ageSpecificMarriageRate <- data.frame(year=csv_femaleAgeSpecificMarriageRate$year, 
+                                             value=((csv_femaleAgeSpecificMarriageRate$value+csv_maleAgeSpecificMarriageRate$value)/2), 
+                                             age_group=csv_femaleAgeSpecificMarriageRate$level_2
+    )
+    df_numMarriagesFemaleByAge <- group_by(csv_femaleAgeSpecificMarriageRate, age_group=level_2) %>% 
+      summarise(number=sum(value))
+    df_numMarriagesMaleByAge <- group_by(csv_maleAgeSpecificMarriageRate, age_group=level_2) %>% 
+      summarise(number=sum(value))
+    df_numMarriagesByAge <- data.frame(age_group=df_numMarriagesFemaleByAge$age_group,
+                                       number=((df_numMarriagesFemaleByAge$number+df_numMarriagesMaleByAge$number)/2)
+    )
+    df_flatsConstructedByHDB <- subset(csv_flatsConstructedByHDB, year>=1980)
+    df_ageSpecificMarriageRate_f <- subset(df_ageSpecificMarriageRate, 
+                                           (age_group==('25 - 29 Years') | age_group==('30 - 34 Years'))
+    )
+    df_numMarriagesByYear_f <- group_by(df_ageSpecificMarriageRate_f, year=year) %>% 
+      summarise(number=sum(value))
+    df_numDivorces_f <- subset(csv_totalDivorcesByDurationOfMarriage, 
+                               (level_2==('5-9 Years'))
+    )
+    
+    accumulate_by <- function(dat, var) {
+      var <- lazyeval::f_eval(var, dat)
+      lvls <- plotly:::getLevels(var)
+      dats <- lapply(seq_along(lvls), function(x) {
+        cbind(dat[var %in% lvls[seq(1, x)], ], frame = lvls[[x]])
+      })
+      dplyr::bind_rows(dats)
+    }
+    
+    accumulated_ageSpecificMarriageRate <- df_ageSpecificMarriageRate %>%
+      accumulate_by(~year)
+    
+    animated_plotly_linechart_marriageRateByAge <- accumulated_ageSpecificMarriageRate %>%
+      plot_ly(
+        x=~year, 
+        y=~value,
+        split=~age_group,
+        frame=~frame, 
+        type='scatter',
+        mode='lines', 
+        line=list(simplyfy = F),
+        hoverinfo='text', 
+        text=~paste('Age Group:', age_group, 
+                    '<br> Year:', year, 
+                    '<br> Marriages per 1,000 Residents:', value
+        )
+      ) %>% 
+      layout(
+        title='Marriage Rate by Age Group', 
+        xaxis = list(
+          title = "Years",
+          zeroline = F
+        ),
+        yaxis = list(
+          title = "Marriages per 1,000 Residents",
+          zeroline = F
+        )
+      ) %>% 
+      animation_opts(
+        frame = 100, 
+        transition = 0, 
+        redraw = FALSE
+      ) %>%
+      animation_slider(
+        currentvalue = list(
+          prefix = "Year: "
+        )
+      ) 
+    
+    
+    plotly_linechart_marriageRateByAge <- plot_ly(
+      data=df_ageSpecificMarriageRate, 
+      x=~df_ageSpecificMarriageRate$year, 
+      y=~df_ageSpecificMarriageRate$value, 
+      type='scatter',
+      mode='lines', 
+      color=~df_ageSpecificMarriageRate$age_group, 
+      hoverinfo='text', 
+      text=~paste('Age Group:', age_group, 
+                  '<br> Year:', year, 
+                  '<br> Marriages per 1,000 Residents:', value
+      )
+    ) %>% layout(
+      title='Marriage Rate by Age Group', 
+      xaxis=list(title='Years'), 
+      yaxis=list(title='Marriages per 1,000 Residents')
+    )
+    
+    plotly_piechart_marriageRateByAge <- plot_ly(df_numMarriagesByAge, 
+                                                 labels = ~df_numMarriagesByAge$age_group, 
+                                                 values = ~df_numMarriagesByAge$number, 
+                                                 type = 'pie',
+                                                 marker = list(colors=brewer.pal(7,'Set3')),
+                                                 textposition = 'inside',
+                                                 textinfo = 'label+percent',
+                                                 insidetextfont = list(color = c('#595959')),
+                                                 hoverinfo = 'text',
+                                                 text = ~paste(number, 'Marriages per 1,000 Residents')
+    ) %>% layout(
+      title='Marriage Rate by Age Group', 
+      xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+      yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE)
+    )
+    
+    plotly_linechart_marriageAndConstructionRate <- plot_ly() %>%
+      add_lines(x=df_numMarriagesByYear_f$year, 
+                y=df_numMarriagesByYear_f$number,
+                name="Marriage Rate by 25 - 34 Years",
+                type="scatter", 
+                mode="lines",
+                line=list(color = '#E7298A'),
+                hoverinfo='text', 
+                text=~paste('Year:', df_numMarriagesByYear_f$year, 
+                            '<br> Marriages per 1,000 Residents:', df_numMarriagesByYear_f$number
+                )) %>%
+      add_lines(x=df_flatsConstructedByHDB$year, 
+                y=df_flatsConstructedByHDB$flats_constructed, 
+                name="Flats Constructed", 
+                yaxis="y2",
+                type="scatter", 
+                mode="lines",
+                line=list(color = '#E6AB02'),
+                hoverinfo='text', 
+                text=~paste('Year:', df_flatsConstructedByHDB$year, 
+                            '<br> Number of Flats:', df_flatsConstructedByHDB$flats_constructed
+                )) %>%
+      layout(
+        title="Marriage and Flats Construction Rate", 
+        yaxis=list(
+          title="Marriages per 1,000 Residents"
+        ),
+        yaxis2=list(
+          title="Number of Flats",
+          overlaying = "y",
+          side = "right"
+        ),
+        xaxis=list(title="Year", ticks=df_numMarriagesByYear_f$year)
+      )
+    
+    plotly_linechart_marriageAndDivorceRate <- plot_ly() %>%
+      add_lines(x=df_numMarriagesByYear_f$year, 
+                y=df_numMarriagesByYear_f$number,
+                name="Marriage Rate by 25 - 34 Years",
+                type="scatter", 
+                mode="lines",
+                hoverinfo='text', 
+                line=list(color = '#E7298A'),
+                text=~paste('Year:', df_numMarriagesByYear_f$year, 
+                            '<br> Marriages per 1,000 Residents:', df_numMarriagesByYear_f$number
+                )) %>%
+      add_lines(x=df_numDivorces_f$year, 
+                y=df_numDivorces_f$value, 
+                name="Number of Divorces within 5-9 Years", 
+                yaxis="y2",
+                type="scatter", 
+                mode="lines",
+                line=list(color = '#666666'),
+                hoverinfo='text', 
+                text=~paste('Year:', df_numDivorces_f$year, 
+                            '<br> Number of Divorces:', df_numDivorces_f$value
+                )) %>%
+      layout(
+        title="Marriage and Divorce Rate", 
+        yaxis=list(
+          title="Marriages per 1,000 Residents"
+        ),
+        yaxis2=list(
+          title="Number of Divorces",
+          overlaying="y",
+          side="right"
+        ),
+        xaxis=list(title="Year", ticks=df_numMarriagesByYear_f$year)
+      )
+    
+    plotly_barchart_grants <- plot_ly(df_grants, 
+                                      y=~grant_amount, 
+                                      type='bar',
+                                      color=~income_level, 
+                                      hoverinfo='text', 
+                                      text=~paste('Income:', income_level, 
+                                                  '<br> Grant Amount:', grant_amount
+                                      )
+    ) %>% layout(
+      title = "Grants by Income Level",
+      xaxis = list(title = "Half of Average Monthly Household Income* Over 12 Months", showticklabels = FALSE),
+      yaxis = list(title = "Grant Amount (S$)")
+    )
+    
     output$barchart_grants <- renderPlotly({
       plotly_barchart_grants
     })
