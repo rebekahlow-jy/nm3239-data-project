@@ -5,8 +5,8 @@ account: rebekahlow-nm3239
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 234845
-bundleId: 1072695
+bundleId: 1079182
 url: https://rebekahlow-nm3239.shinyapps.io/nm3239-data-project/
-when: 1510577643.28251
+when: 1510848709.20067
 asMultiple: FALSE
 asStatic: FALSE

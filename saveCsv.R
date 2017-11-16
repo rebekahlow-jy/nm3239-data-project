@@ -5,3 +5,6 @@ csv_femaleGeneralMarriageRate <- read.csv("./csv/female-general-marriage-rate.cs
 csv_maleGeneralMarriageRate <- read.csv("./csv/male-general-marriage-rate.csv")
 csv_totalDivorcesByDurationOfMarriage <- read.csv("./csv/total-divorces-by-duration-of-marriage-annual.csv")
 csv_flatsConstructedByHDB <- read.csv("./csv/flats-constructed-by-housing-and-development-board-annual.csv")
+csv_resale_flat_price_2000_2012 <- read.csv("./csv/resale-flat-prices-based-on-approval-date-2000-feb-2012.csv")
+csv_resale_flat_price_2012_2015 <- read.csv("./csv/resale-flat-prices-based-on-registration-date-from-march-2012-onwards.csv")
+csv_hdb_price <- read.csv("./csv/price-range-of-hdb-flats-offered.csv")

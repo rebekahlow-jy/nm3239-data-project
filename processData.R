@@ -33,4 +33,9 @@ df_numMarriagesByYear_f <- group_by(df_ageSpecificMarriageRate_f, year=year) %>%
 df_numDivorces_f <- subset(csv_totalDivorcesByDurationOfMarriage, 
                            (level_2==('5-9 Years'))
 )
-
+df_divorce_marriage <- left_join(df_numMarriagesByYear_f, df_numDivorces_f) %>% select(-level_1, -level_2, -year)
+cor(df_divorce_marriage, use="complete.obs", method="pearson")
+df_hdb_marriage <- left_join(df_numMarriagesByYear_f, df_flatsConstructedByHDB) %>% select(-year)
+cor(df_hdb_marriage, use="complete.obs", method="pearson")
+df_resale_flat_price <- rbind(csv_resale_flat_price_2000_2012, csv_resale_flat_price_2012_2015) %>% select(month, flat_type, resale_price)
+df_hdb_price <- csv_hdb_price %>% select(-min_selling_price_less_ahg_shg, -max_selling_price_less_ahg_shg, -town)

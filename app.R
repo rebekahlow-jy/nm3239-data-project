@@ -150,19 +150,21 @@ shinyApp(
                                 withSpinner(plotlyOutput("animatedchart_marriageRateByAge")),
                                 br(),
                                 br(),
-                                h4("Insert Explanation, Phenomeon and Future Implications"),
+                                hr(),
                                 br(),
                                 br(),
                                 withSpinner(plotlyOutput("piechart_marriageRateByAge")),
                                 br(),
                                 br(),
-                                h4("Insert Explanation, Phenomeon and Future Implications"),
+                                h4("The age groups of 25 - 29 Years and 30 - 34 Years emerged dominant from the other age ranges. 
+                                   These 2 age ranges (25- 29 Years & 30 - 34 Years) were consistently the ages 
+                                   that most people got married every year."),
                                 br(),
                                 br()
                               )
                             )
                    ),
-                   tabPanel("More Flat, More Marriages?",
+                   tabPanel("More Marriages, More Flats?",
                             fluidRow(
                               column(12, align="center",
                                 br(),
@@ -170,22 +172,26 @@ shinyApp(
                                 withSpinner(plotlyOutput("linechart_marriageAndConstructionRate")),
                                 br(),
                                 br(),
-                                h4("Insert Explanation, Phenomeon and Future Implications"),
-                                br(),
-                                br()
-                              )
-                            )
-                   ),
-                   tabPanel("How Much Will It Cost?",
-                            fluidRow(
-                              column(12, align="center",
-                                br(),
-                                br(),
-                                withSpinner(plotlyOutput("barchart_grants")),
-                                br(),
-                                br(),
-                                h4("Insert Explanation, Phenomeon and Future Implications"),
-                                br(),
+                                h4("There is a positive correlation between the number of marriages 
+                                    per 1000 residents and the number of flats being constructed. However, 
+                                   there were years that showed an inverse relationship between the 2 observations."),
+                                h3("Between 1986-1989"),
+                                h4("There seem to be an inverse relationship between number of
+                                    marriages and flats being built which go against our assumption that people are 
+                                    marrying for the flat."),
+                                h3("1986"),
+                                h4("The government recognised that its past policy - ‘Stop at Two’, 
+                                   was too successful at curbing the birth rates during the postwar baby boom, 
+                                   fearing that it might put a strain on the developing economy. This affected the 
+                                   marriage rates as one would often need to get married first before raising a child."),
+                                h3("1987"),
+                                h4("Goh Chok Tong, along with the government, rolled out ‘Have Three or More’ to promote 
+                                   a bigger family for married couples who are financially-abled to handle. This is in 
+                                   line with HDB’s ‘Third Child Priority Scheme’, which aims helps families with 
+                                   more than 2 children and encourages the formation of larger families"),
+                                h3("More Marriage, Not More Flats Bought"),
+                                h4("This scheme should influence both the marriage and flat construction graph positively. 
+                                   However, there is a decrease in the number of flat constructed."),
                                 br()
                               )
                             )
@@ -198,12 +204,27 @@ shinyApp(
                                 withSpinner(plotlyOutput("linechart_marriageAndDivorceRate")),
                                 br(),
                                 br(),
-                                h4("Insert Explanation, Phenomeon and Future Implications"),
+                                h4("There was a net amount of marriages since 1980 before it equalised at 
+                                   about 1999/2000. After 2000, the disparity between marriages
+                                   and divorces grew, resulting in a net divorce."),
                                 br(),
                                 br(),
-                                actionButton("jumpToP4", "Next", class="btn-primary", style="height: 50px; font-size: 18px; width: 200px;"),
                                 br(),
                                 br()
+                              )
+                            )
+                   ),
+                   tabPanel("How Much Will It Cost?",
+                            fluidRow(
+                              column(12, align="center",
+                                     br(),
+                                     br(),
+                                     withSpinner(plotlyOutput("barchart_grants")),
+                                     br(),
+                                     br(),
+                                     br(),
+                                     actionButton("jumpToP4", "Next", class="btn-primary", style="height: 50px; font-size: 18px; width: 200px;"),
+                                     br()
                               )
                             )
                    )
@@ -403,15 +424,15 @@ shinyApp(
                             '<br> Marriages per 1,000 Residents:', df_numMarriagesByYear_f$number
                 )) %>%
       add_lines(x=df_numDivorces_f$year, 
-                y=df_numDivorces_f$value, 
-                name="Number of Divorces within 5-9 Years", 
+                y=round(df_numDivorces_f$value/500, 2), 
+                name="Divorces within 5-9 Years", 
                 yaxis="y2",
                 type="scatter", 
                 mode="lines",
                 line=list(color = '#666666'),
                 hoverinfo='text', 
                 text=~paste('Year:', df_numDivorces_f$year, 
-                            '<br> Number of Divorces:', df_numDivorces_f$value
+                            '<br> Divorces per 1,000 Residents:', round(df_numDivorces_f$value/500, 2)
                 )) %>%
       layout(
         title="Marriage and Divorce Rate", 
@@ -419,7 +440,7 @@ shinyApp(
           title="Marriages per 1,000 Residents"
         ),
         yaxis2=list(
-          title="Number of Divorces",
+          title="Divorces per 1,000 Residents",
           overlaying="y",
           side="right"
         ),
