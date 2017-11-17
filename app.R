@@ -249,8 +249,7 @@ shinyApp(
                    column(12, align="center",
                           br(),
                           br(),
-                          h1("In conclusion, couples are more strongly driven
-                             to buy HDB as an investment, than as a love shack ):"),
+                          h1("So looking through this, do you believe that couples purchase a HDB for love, or for an investment?"),
                           br(),
                           br(),
                           actionButton("jumpToP1", "Replay", class="btn-primary", style="height: 50px; font-size: 18px; width: 200px;")
