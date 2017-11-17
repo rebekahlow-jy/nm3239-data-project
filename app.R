@@ -192,6 +192,16 @@ shinyApp(
                                 h3("More Marriage, Not More Flats Bought"),
                                 h4("This scheme should influence both the marriage and flat construction graph positively. 
                                    However, there is a decrease in the number of flat constructed."),
+                                h3("1997-1999"),
+                                h4("Singapore’s economy was greatly affected by the Asian Financial Crisis. It was triggered
+                                   by the Thai government’s decision to seize intervention on the Thai Baht causing a sharp 
+                                   depreciation of the Thai Baht against United State (US) dollar. This brought about frenzy 
+                                   amongst investors as they lose confidence in the strength of the currencies in Asia. 
+                                   Singapore’s economy inevitably faced a slump, falling from 8% growth to 1.5% in 1998"),
+                                h4("Singapore’s labour market took a toll, it was inevitable for the unemployment rate to go up, 
+                                   affecting people’s purchasing power. Furthermore, the pessimism in the economy, 
+                                   with drop in purchasing power, would likely trigger a decrease in demand for 
+                                   housing as people are more conservative with spendings"),
                                 br()
                               )
                             )
@@ -239,10 +249,8 @@ shinyApp(
                    column(12, align="center",
                           br(),
                           br(),
-                          htmlOutput("hugimage"),
-                          h1("The house may go but we'll still be together."),
-                          br(),
-                          h4("Insert Conclusion"),
+                          h1("In conclusion, couples are more strongly driven
+                             to buy HDB as an investment, than as a love shack ):"),
                           br(),
                           br(),
                           actionButton("jumpToP1", "Replay", class="btn-primary", style="height: 50px; font-size: 18px; width: 200px;")
